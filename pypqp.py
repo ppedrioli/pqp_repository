@@ -113,16 +113,31 @@ class Protein:
 
   @staticmethod
   def split_protein_names(proteins):
-    """
-    Splits protein_accession into individual protein_accessions.
+    """Splits protein_accession into individual protein_accessions.
     E.g.: 2/sp|P55011|S12A2_HUMAN/sp|P37108|SRP14_HUMAN ->
     [{sp|P55011|S12A2_HUMAN, sp|P37108|SRP14_HUMAN}]
+
+    Unfortunately, this depends on how the library was created.
+    When going from splib to mrm we will end up with ; separations
+    instead of / sp|Q9Y5K3|PCY1B_HUMAN;sp|P49585|PCY1A_HUMAN
+
+    WARNING if the libary uses another separation method this will
+    silently fail to separate the protein entries
 
     :param rows: list of tuples of protein_accessions
 
     :return: List of individual protein_accession sets
+
     """
-    return [{protein_accession[0].split('/')[1]} for protein_accession in proteins]
+    if len(proteins[0][0].split('/')) > 1:
+      # Protein accessions separated by /
+      # In this case even an entry with a single protein id will have the separator
+      return [set(protein_accession[0].split('/')[1:]) for protein_accession in proteins]
+    else:
+      # Protein accessions separated by ;
+      # WARNING in this case an entry with a single protein ID will not have a separator
+      return [set(protein_accession[0].split(';')) for protein_accession in proteins]
+
 
   def unique_proteins(self):
     """
